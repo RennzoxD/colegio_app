@@ -118,7 +118,7 @@ class AppTheme {
       ),
       
       // Estilo de las tarjetas
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
