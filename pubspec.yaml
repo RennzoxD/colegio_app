@@ -53,3 +53,10 @@ dependencies:
   
     # Iconos
   cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# For information on the generic Dart `test` package, see:
+# https://pub.dev/packages/test
