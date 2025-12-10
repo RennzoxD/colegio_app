@@ -3,69 +3,109 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
 
-/// Dashboard para Padres/Tutores
+/// Dashboard para Docentes
 class TeacherDashboard extends StatelessWidget {
   const TeacherDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.currentUser!;
+    return Consumer<AuthProvider>(
+      builder: (_, authProvider, __) {
+        final user = authProvider.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Panel de Docente'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await authProvider.logout();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              }
-            },
+        if (user == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Panel de Docente'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () async {
+                  await authProvider.logout();
+
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LoginScreen(),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Center(
+          body: _DashboardContent(user: user),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardContent extends StatelessWidget {
+  final dynamic user;
+
+  const _DashboardContent({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
-              Icons.family_restroom,
-              size: 100,
-              color: Colors.blue,
+              Icons.school,
+              size: 110,
+              color: Colors.blueAccent,
             ),
             const SizedBox(height: 24),
+
+            // Saludo
             Text(
               '¡Bienvenido/a!',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
+
             Text(
               user.name,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+
             Text(
               user.email,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+
             const SizedBox(height: 32),
-            const Text(
-              '🎉 Dashboard de Admin',
-              style: TextStyle(fontSize: 20),
+
+            // Título del dashboard
+            Text(
+              '📘 Dashboard del Docente',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
+
             const SizedBox(height: 16),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                'Aquí podrás ver:\n• Notas de tus hijos\n• Asistencias\n• Estado de cuenta\n• Comunicados',
-                textAlign: TextAlign.center,
-              ),
+
+            Text(
+              'Aquí podrás gestionar:\n'
+              '• Asistencias\n'
+              '• Notas\n'
+              '• Comunicados\n'
+              '• Actividades escolares',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
