@@ -6,10 +6,9 @@ import '../student/student_dashboard.dart';
 import '../teacher/teacher_dashboard.dart';
 import '../admin/admin_dashboard.dart';
 
-// Asumiendo que UserRole está definido en tu auth_provider.dart
-enum UserRole { parent, student, teacher, admin } 
+// Nota: Asegúrate de que UserRole esté definido en 'auth_provider.dart'
 
-/// Pantalla de Login
+/// Pantalla de Login con diseño mejorado
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,66 +16,81 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  // Controladores para los campos de texto
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  // Key para el formulario (para validaciones)
   final _formKey = GlobalKey<FormState>();
-  
-  // Para mostrar/ocultar la contraseña
   bool _obscurePassword = true;
+
+  // Animación para el logo/tarjeta
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2), // Empieza ligeramente abajo
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
+
+    // Iniciar la animación después de un pequeño retraso
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) _animationController.forward();
+    });
+  }
 
   @override
   void dispose() {
-    // IMPORTANTE: Limpiar los controladores cuando se destruye la pantalla
     _emailController.dispose();
     _passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
-  /// Método que se ejecuta al presionar "Iniciar Sesión"
+  /// Método de login (sin cambios funcionales)
   Future<void> _handleLogin() async {
-    // Validar el formulario
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
-      // Intentar hacer login
+
+      // Limpiar mensaje de error previo al intentar de nuevo
+      // Esta línea debe estar en tu AuthProvider.dart, pero la simulamos aquí si no está:
+      // authProvider.clearError();
+
       final success = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
       if (success && mounted) {
-      // Login exitoso - Navegar según el rol
-      final user = authProvider.currentUser!;
-      Widget dashboard;
+        final user = authProvider.currentUser!;
+        Widget dashboard;
 
-      switch (user.role) {
-        case UserRole.parent: // Asegúrate de que esta línea esté presente y correcta
-          dashboard = const ParentDashboard();
-          break;
-        case UserRole.student:
-          dashboard = const StudentDashboard();
-          break;
-        case UserRole.teacher:
-          dashboard = const TeacherDashboard();
-          break;
-        case UserRole.admin:
-          dashboard = const AdminDashboard();
-          break;
-        // ⭐ SOLUCIÓN CLAVE: Añadir un 'default' si el rol no está cubierto o es inesperado
-        default: 
-          // Puedes navegar a una pantalla de error, un login de nuevo, o un dashboard genérico.
-          // Aquí vamos a un dashboard por defecto (ej. estudiante) o mostramos un error.
-          // Para ser seguro, puedes lanzar un error o ir al dashboard de estudiante:
-          dashboard = const StudentDashboard(); 
-          // O podrías mostrar un error en pantalla (más recomendado para producción):
-          // throw Exception("Rol de usuario desconocido: ${user.role}");
-      }
+        switch (user.role) {
+          case UserRole.parent:
+            dashboard = const ParentDashboard();
+            break;
+          case UserRole.student:
+            dashboard = const StudentDashboard();
+            break;
+          case UserRole.teacher:
+            dashboard = const TeacherDashboard();
+            break;
+          case UserRole.admin:
+            dashboard = const AdminDashboard();
+            break;
+          default:
+            // Manejo de rol inesperado (solución al problema anterior)
+            dashboard = const StudentDashboard(); 
+        }
 
-        // Navegar al dashboard correspondiente
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => dashboard),
         );
@@ -86,159 +100,81 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Definimos el ancho máximo para que se vea bien en pantallas grandes (web/tablet)
+    final theme = Theme.of(context);
     final isLargeScreen = MediaQuery.of(context).size.width > 600;
-    final maxCardWidth = isLargeScreen ? 400.0 : double.infinity;
+    final maxFormWidth = isLargeScreen ? 420.0 : double.infinity;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxCardWidth),
-              child: Consumer<AuthProvider>(
-                builder: (context, authProvider, child) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // --- Encabezado Mejorado ---
-                      // Puedes reemplazar el Icon con un Image.asset si tienes un logo
-                      Icon(
-                        Icons.school_sharp, // Icono ligeramente diferente
-                        size: 80,
-                        color: Theme.of(context).colorScheme.primary, // Usamos colorScheme
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Bienvenido/a al Sistema Escolar',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onBackground,
+      // --- FASE 1: Fondo y Color principal ---
+      body: Container(
+        // Fondo de color primario para el "look" de portal
+        color: theme.colorScheme.primary, 
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxFormWidth),
+                child: Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    return SlideTransition(
+                      position: _slideAnimation, // Aplicamos animación
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // --- FASE 2: Encabezado y Marca ---
+                          _buildHeader(context),
+                          const SizedBox(height: 32),
+                          
+                          // --- FASE 3: Tarjeta de Login (La Capa Flotante) ---
+                          Card(
+                            elevation: 16, // Elevación fuerte
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Inicia sesión con tu correo y contraseña.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 48),
-
-                      // --- Contenedor del Formulario (Card Elevado) ---
-                      Card(
-                        elevation: 8, // Una sombra más marcada para un look moderno
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min, // Ocupar el espacio mínimo vertical
-                              children: [
-                                // Campo de Email
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    labelText: 'Correo Electrónico',
-                                    prefixIcon: const Icon(Icons.person_outline), // Icono más común para login
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), // Bordes redondeados
-                                    hintText: 'ejemplo@uepth.edu',
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa tu correo';
-                                    }
-                                    // Validación simple de formato de email (opcional)
-                                    if (!value.contains('@') || !value.contains('.')) {
-                                       return 'Ingresa un correo válido';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Campo de Contraseña
-                                TextFormField(
-                                  controller: _passwordController,
-                                  obscureText: _obscurePassword,
-                                  decoration: InputDecoration(
-                                    labelText: 'Contraseña',
-                                    prefixIcon: const Icon(Icons.lock_outline),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), // Bordes redondeados
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
+                            child: Padding(
+                              padding: const EdgeInsets.all(28.0),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Iniciar Sesión',
+                                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                                     ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa tu contraseña';
-                                    }
-                                    return null;
-                                  },
+                                    const SizedBox(height: 24),
+
+                                    // Campo de Email
+                                    _buildEmailField(theme),
+                                    const SizedBox(height: 16),
+
+                                    // Campo de Contraseña
+                                    _buildPasswordField(theme),
+                                    const SizedBox(height: 24),
+                                    
+                                    // Mensaje de Error
+                                    if (authProvider.errorMessage != null)
+                                      _buildErrorMessage(context, authProvider.errorMessage!),
+                                      
+                                    // Botón de Iniciar Sesión
+                                    _buildLoginButton(context, authProvider),
+                                  ],
                                 ),
-                                const SizedBox(height: 24),
-                                
-                                // Mostrar error si hay
-                                if (authProvider.errorMessage != null)
-                                  _buildErrorMessage(context, authProvider.errorMessage!),
-                                  
-                                // Botón de Iniciar Sesión
-                                SizedBox(
-                                  height: 56, // Botón un poco más alto
-                                  child: ElevatedButton.icon(
-                                    icon: authProvider.isLoading ? const SizedBox.shrink() : const Icon(Icons.login),
-                                    label: authProvider.isLoading
-                                        ? const SizedBox(
-                                            height: 20,
-                                            width: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.5, // Grosor ligeramente mayor
-                                              color: Colors.white,
-                                            ),
-                                          )
-                                        : const Text('INICIAR SESIÓN', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                    onPressed: authProvider.isLoading ? null : _handleLogin,
-                                    style: ElevatedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10), // Borde redondeado
-                                      ),
-                                      minimumSize: const Size(double.infinity, 56), // Asegura ancho completo
-                                      backgroundColor: Theme.of(context).colorScheme.primary, // Usa el color primario
-                                      foregroundColor: Theme.of(context).colorScheme.onPrimary, // Texto en color opuesto al primario
-                                      elevation: 4,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 48),
+                          const SizedBox(height: 40),
 
-                      // Información de prueba (Movida fuera del Card principal)
-                      if (authProvider.currentUser == null) // Solo si no ha iniciado sesión
-                         _buildTestInfoCard(),
-                    ],
-                  );
-                },
+                          // --- FASE 4: Información de Prueba (Opcional, en el fondo) ---
+                          if (authProvider.currentUser == null)
+                             _buildTestInfoCard(),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -246,25 +182,143 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-  
-  // Widget para el mensaje de error (Ligeramente ajustado)
+
+  // --- WIDGETS AUXILIARES ---
+
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Icon(
+          Icons.school_sharp,
+          size: 90,
+          color: Colors.white, // Ícono blanco sobre fondo primario
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'U.E.P. Técnico Humanístico',
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Portal Educativo',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: Colors.white70,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(ThemeData theme) {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: 'Correo Electrónico',
+        prefixIcon: const Icon(Icons.person_outline),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: theme.colorScheme.surface, // Color de fondo del campo
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ingresa tu correo';
+        }
+        if (!value.contains('@')) {
+           return 'Formato de correo inválido';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPasswordField(ThemeData theme) {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _obscurePassword,
+      decoration: InputDecoration(
+        labelText: 'Contraseña',
+        prefixIcon: const Icon(Icons.lock_outline),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: theme.colorScheme.surface,
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscurePassword
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ingresa tu contraseña';
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext context, AuthProvider authProvider) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 56, 
+      child: ElevatedButton(
+        child: authProvider.isLoading
+            ? SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
+            : Text('ACCEDER AL PORTAL', style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+              )),
+        onPressed: authProvider.isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: theme.colorScheme.secondary, // Usamos 'secondary' para un mejor contraste.
+          elevation: 6,
+        ),
+      ),
+    );
+  }
+
   Widget _buildErrorMessage(BuildContext context, String message) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.error.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.error.withOpacity(0.5)),
+        color: theme.colorScheme.errorContainer, // Color de fondo para errores (Material 3)
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: theme.colorScheme.error),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error, color: Theme.of(context).colorScheme.error),
+          Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w500),
+              style: TextStyle(color: theme.colorScheme.onErrorContainer, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -272,28 +326,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-
-  /// Card con información de usuarios de prueba (Colores y estilo ajustados)
   Widget _buildTestInfoCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50,
+        color: Colors.white.withOpacity(0.2), // Fondo semitransparente sobre el color primario
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade200),
+        border: Border.all(color: Colors.white30),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.verified_user_outlined, color: Colors.amber.shade700, size: 20),
+              const Icon(Icons.bug_report, color: Colors.white70, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Acceso de Prueba (Desarrollo)',
+                'Acceso de Pruebas (DEV)',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.amber.shade900,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -308,7 +360,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'Contraseña: cualquiera',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.amber.shade700,
+              color: Colors.white70,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -316,7 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
+  
   Widget _buildTestUser(String role, String email) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -327,14 +379,14 @@ class _LoginScreenState extends State<LoginScreen> {
               text: '• $role: ',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Colors.amber.shade800,
+                color: Colors.white,
               ),
             ),
             TextSpan(
               text: email,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.amber.shade800,
+                color: Colors.white70,
               ),
             ),
           ],
