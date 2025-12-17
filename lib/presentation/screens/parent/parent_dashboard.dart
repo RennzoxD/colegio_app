@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
+import 'package:colegio_app/presentation/providers/auth_provider.dart';
+import 'package:colegio_app/presentation/screens/auth/login_screen.dart';
 
 /// Dashboard para Padres/Tutores
 class ParentDashboard extends StatelessWidget {

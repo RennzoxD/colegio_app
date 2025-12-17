@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
+import 'package:colegio_app/presentation/providers/auth_provider.dart';
+import 'package:colegio_app/presentation/screens/auth/login_screen.dart';
 
 /// Dashboard para Padres/Tutores
 class StudentDashboard extends StatelessWidget {
@@ -55,7 +55,7 @@ class StudentDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             const Text(
-              '🎉 Dashboard de Admin',
+              '🎉 Dashboard de Estudiante',
               style: TextStyle(fontSize: 20),
             ),
             const SizedBox(height: 16),
