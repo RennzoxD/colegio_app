@@ -3,6 +3,15 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
 
+// Screens
+import 'student_info_screen.dart';
+import 'student_subjects_screen.dart';
+import 'student_tasks_screen.dart';
+import 'student_grades_screen.dart';
+import 'student_attendance_screen.dart';
+import 'student_schedule_screen.dart';
+import 'student_progress_screen.dart';
+
 class StudentDashboard extends StatelessWidget {
   const StudentDashboard({super.key});
 
@@ -44,15 +53,85 @@ class StudentDashboard extends StatelessWidget {
               ),
             ),
 
-            _drawerItem(icon: Icons.person, text: "Mi Información"),
-            _drawerItem(icon: Icons.book, text: "Mis Materias"),
-            _drawerItem(icon: Icons.task, text: "Mis Tareas"),
-            _drawerItem(icon: Icons.grade, text: "Mis Notas"),
-            _drawerItem(icon: Icons.event_available, text: "Mi Asistencia"),
-            _drawerItem(icon: Icons.schedule, text: "Mi Horario"),
-            _drawerItem(icon: Icons.show_chart, text: "Mi Progreso"),
+            _drawerItem(
+              icon: Icons.person,
+              text: "Mi Información",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentInfoScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.book,
+              text: "Mis Materias",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentSubjectsScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.task,
+              text: "Mis Tareas",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentTasksScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.grade,
+              text: "Mis Notas",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentGradesScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.event_available,
+              text: "Mi Asistencia",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentAttendanceScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.schedule,
+              text: "Mi Horario",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentScheduleScreen(),
+                ));
+              },
+            ),
+            _drawerItem(
+              icon: Icons.show_chart,
+              text: "Mi Progreso",
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentProgressScreen(),
+                ));
+              },
+            ),
             const Divider(),
-            _drawerItem(icon: Icons.home_outlined, text: "Inicio"),
+            _drawerItem(
+              icon: Icons.home_outlined,
+              text: "Inicio",
+              onTap: () {
+                Navigator.of(context).pop();
+                // ya estamos en inicio; cerrar el drawer
+              },
+            ),
 
             const Spacer(),
 
@@ -195,14 +274,14 @@ class StudentDashboard extends StatelessWidget {
   }
 
   // Drawer Item Widget
-  Widget _drawerItem({required IconData icon, required String text}) {
+  Widget _drawerItem({required IconData icon, required String text, VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xff003366)),
       title: Text(
         text,
         style: const TextStyle(color: Color(0xff003366), fontSize: 15),
       ),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 }
